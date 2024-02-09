@@ -1,7 +1,7 @@
 <script>
     import { onMount } from 'svelte';
-    import { Button, Table, Input, Card } from 'flowbite-svelte';
-    
+    import { Button, Card, Input, Table, TableBody, TableBodyCell, TableBodyRow, TableHead, TableHeadCell } from 'flowbite-svelte';
+
     let steamID3 = '88223015';
     let playerStats = {};
     let playerTotals = [];
@@ -14,41 +14,29 @@
     let heroes = [];
 
     async function fetchHeroes() {
-        try {
-            const response = await fetch('https://api.opendota.com/api/heroes');
-            heroes = await response.json();
-        } catch (error) {
-            console.error('Error fetching heroes:', error);
-        }
+        const response = await fetch('https://api.opendota.com/api/heroes');
+        heroes = await response.json();
     }
 
     async function fetchData() {
         const accountId = steamID3;
-        try {
-            const [statsResponse, wlResponse, totalsResponse, matchesResponse] = await Promise.all([
-                fetch(`https://api.opendota.com/api/players/${accountId}`),
-                fetch(`https://api.opendota.com/api/players/${accountId}/wl`),
-                fetch(`https://api.opendota.com/api/players/${accountId}/totals`),
-                fetch(`https://api.opendota.com/api/players/${accountId}/matches`),
-            ]);
-            playerStats = await statsResponse.json();
-            playerStats.winLose = await wlResponse.json();
-            playerTotals = await totalsResponse.json();
-            matchHistory = await matchesResponse.json();
-            paginateMatches();
-        } catch (error) {
-            console.error("Error fetching data:", error);
-        }
+        const [statsResponse, wlResponse, totalsResponse, matchesResponse] = await Promise.all([
+            fetch(`https://api.opendota.com/api/players/${accountId}`),
+            fetch(`https://api.opendota.com/api/players/${accountId}/wl`),
+            fetch(`https://api.opendota.com/api/players/${accountId}/totals`),
+            fetch(`https://api.opendota.com/api/players/${accountId}/matches`),
+        ]);
+        playerStats = await statsResponse.json();
+        playerStats.winLose = await wlResponse.json();
+        playerTotals = await totalsResponse.json();
+        matchHistory = await matchesResponse.json();
+        paginateMatches();
     }
 
     async function fetchMatchDetails(matchId) {
-        try {
-            const response = await fetch(`https://api.opendota.com/api/matches/${matchId}`);
-            matchDetails = await response.json();
-            viewingMatchDetails = true;
-        } catch (error) {
-            console.error("Error fetching match details:", error);
-        }
+        const response = await fetch(`https://api.opendota.com/api/matches/${matchId}`);
+        matchDetails = await response.json();
+        viewingMatchDetails = true;
     }
 
     function viewPlayerStats() {
@@ -72,79 +60,160 @@
         return `${minutes}:${secondsRemaining < 10 ? '0' : ''}${secondsRemaining}`;
     }
 
-    onMount(async () => {
-        await fetchHeroes();
-    });
-
     function getHeroName(heroId) {
         const hero = heroes.find(hero => hero.id === heroId);
         return hero ? hero.localized_name : 'Unknown';
     }
+
+    onMount(async () => {
+        await fetchHeroes();
+    });
 </script>
 
-<div class="container mx-auto p-4">
+<style>
+    .futuristic-btn {
+        background: linear-gradient(45deg, #6dd5ed, #2193b0);
+        color: white;
+        border: none;
+        box-shadow: 0 4px 15px rgba(33, 147, 176, 0.4);
+    }
+    .futuristic-card {
+        background: #1a1a2e;
+        color: #e7e7e7;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+    }
+    .futuristic-header {
+        color: #e0e0e0;
+        text-shadow: 0 0 10px rgba(33, 147, 176, 0.7);
+    }
+    :global(body) {
+        background-color: #121212;
+        color: #ffffff;
+    }
+    /* Adjust text color for better readability */
+    .text-gray-600 {
+        color: rgba(255, 255, 255, 0.7);
+    }
+
+    .text-green-500 {
+        color: #4caf50; /* Green color */
+    }
+
+    .text-red-500 {
+        color: #f44336; /* Red color */
+    }
+
+    .text-blue-600 {
+        color: #2196f3; /* Blue color */
+    }
+</style>
+
+<div class="container mx-auto px-4 py-2">
     <div class="mb-6 flex justify-center">
         <Input type="text" bind:value={steamID3} placeholder="Enter SteamID3" class="mr-2 w-full max-w-xs" />
-        <Button on:click={fetchData}>Confirm</Button>
+        <Button on:click={fetchData} class="futuristic-btn">Confirm</Button>
     </div>
+
+   
 
     {#if !viewingMatchDetails}
         {#if playerStats && playerStats.winLose}
-            <Card class="w-full">
-                <h2 class="text-lg font-semibold mb-4">Player Statistics</h2>
-                <p>MMR Estimate: <span class="font-bold">{playerStats.mmr_estimate?.estimate || 'N/A'}</span></p>
-                <p>Wins: <span class="font-bold">{playerStats.winLose.win}</span></p>
-                <p>Losses: <span class="font-bold">{playerStats.winLose.lose}</span></p>
-                {#each playerTotals as total}
-                    <p>{total.field}: <span class="font-bold">{total.sum}</span></p>
-                {/each}
-            </Card>
+            <div class="futuristic-card shadow-xl rounded-lg p-6 mb-6">
+                <h2 class="text-xl font-semibold mb-4 futuristic-header">Player Statistics</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div class="stat-item">
+                        <p class="text-sm font-medium ">MMR Estimate:</p>
+                        <p class="text-lg font-bold ml-2">{playerStats.mmr_estimate?.estimate || 'N/A'}</p>
+                    </div>
+                    <div class="stat-item">
+                        <p class="text-sm font-medium ">Wins:</p>
+                        <p class="text-lg font-bold text-green-500 ml-2">{playerStats.winLose.win}</p>
+                    </div>
+                    <div class="stat-item">
+                        <p class="text-sm font-medium text-gray-600">Losses:</p>
+                        <p class="text-lg font-bold text-red-500 ml-2">{playerStats.winLose.lose}</p>
+                    </div>
+                    <div class="stat-item">
+                        <p class="text-sm font-medium ">Win Rate:</p>
+                        <p class="text-lg font-bold text-blue-600 ml-2">
+                            {Math.round((playerStats.winLose.win / (playerStats.winLose.win + playerStats.winLose.lose)) * 100) || 'N/A'}%
+                        </p>
+                    </div>
+                    {#each playerTotals as total}
+                        <div class="stat-item">
+                            <p class="text-sm font-medium ">{total.field}:</p>
+                            <p class="text-lg font-bold ml-2">{total.sum}</p>
+                        </div>
+                    {/each}
+                </div>
+            </div>
+        {/if}
+
+        {#if paginatedMatches.length}
+            <div class="mt-4">
+                <h2 class="text-lg font-bold mb-4 futuristic-header">Match History</h2>
+                <div class="overflow-x-auto relative shadow-md sm:rounded-lg mb-4">
+                    <Table hoverable={true}>
+                        <TableHead>
+                          <TableHeadCell>Match ID</TableHeadCell>
+                          <TableHeadCell>Hero</TableHeadCell>
+                          <TableHeadCell>K/D/A</TableHeadCell>
+                          <TableHeadCell>Result</TableHeadCell>
+                        </TableHead>
+                        <TableBody class="divide-y">
+                          {#each paginatedMatches as match}
+                            <TableBodyRow class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer" on:click={() => fetchMatchDetails(match.match_id)}>
+                              <TableBodyCell>{match.match_id}</TableBodyCell>
+                              <TableBodyCell>{getHeroName(match.hero_id)}</TableBodyCell>
+                              <TableBodyCell>{match.kills}/{match.deaths}/{match.assists}</TableBodyCell>
+                              <TableBodyCell>{match.radiant_win ? 'Win' : 'Loss'}</TableBodyCell>
+                            </TableBodyRow>
+                          {/each}
+                        </TableBody>
+                      </Table>
+                </div>
+                <div class="flex justify-between mt-4">
+                    <Button disabled={currentPage <= 1} on:click={() => changePage(currentPage - 1)} class="futuristic-btn">Previous</Button>
+                    <Button disabled={(currentPage * rowsPerPage) >= matchHistory.length} on:click={() => changePage(currentPage + 1)} class="futuristic-btn">Next</Button>
+                </div>
+            </div>
         {/if}
     {:else}
         {#if matchDetails}
-            <Card class="w-full">
-                <h2 class="text-lg font-semibold mb-4">Match Details</h2>
-                <p>Match ID: <span class="font-bold">{matchDetails.match_id}</span></p>
-                <p>Duration: <span class="font-bold">{formatDuration(matchDetails.duration)}</span></p>
-                <p>Winner: <span class="font-bold">{matchDetails.radiant_win ? 'Radiant' : 'Dire'}</span></p>
-                <p>Game Mode: <span class="font-bold">{matchDetails.game_mode}</span></p>
-                <p>Lobby Type: <span class="font-bold">{matchDetails.lobby_type}</span></p>
-                <h3 class="font-semibold mt-4">Player Performances:</h3>
-                <ul>
-                    {#each matchDetails.players as player}
-                        <li>Player ID: {player.account_id}, Hero: {getHeroName(player.hero_id)}, K/D/A: {player.kills}/{player.deaths}/{player.assists}, Last Hits: {player.last_hits}, Denies: {player.denies}, GPM: {player.gold_per_min}, XPM: {player.xp_per_min}</li>
-                    {/each}
-                </ul>
-                <Button on:click={viewPlayerStats} class="mt-4">Back to Player Stats</Button>
-            </Card>
-        {/if}
+        <div class="futuristic-card shadow-xl rounded-lg p-6 mb-6">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4 futuristic-header">Match Details</h2>
+            <p>Match ID: <span class="font-bold">{matchDetails.match_id}</span></p>
+            <p>Duration: <span class="font-bold">{formatDuration(matchDetails.duration)}</span></p>
+            <p>Winner: <span class="font-bold">{matchDetails.radiant_win ? 'Radiant' : 'Dire'}</span></p>
+            <p>Game Mode: <span class="font-bold">{matchDetails.game_mode}</span></p>
+            <p>Lobby Type: <span class="font-bold">{matchDetails.lobby_type}</span></p>
+            <h3 class="text-xl font-semibold text-gray-800 mt-6 futuristic-header">Player Performances:</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {#each matchDetails.players as player}
+                    <Card class="{player.isRadiant ? 'bg-green-500' : 'bg-red-500'} text-white rounded-lg p-4">
+                        <p class="font-semibold">{getHeroName(player.hero_id)}</p>
+                        <div class="flex justify-between mt-2">
+                            <div>
+                                <p>Player ID: {player.account_id}</p>
+                                <p>K/D/A: {player.kills}/{player.deaths}/{player.assists}</p>
+                                <p>GPM: {player.gold_per_min}</p>
+                                <p>XPM: {player.xp_per_min}</p>
+                            </div>
+                            <div>
+                                <p>Team: {player.isRadiant ? 'Radiant' : 'Dire'}</p>
+                                <p>Wards Placed: {player.sen_placed}</p>
+                                <p>Runes: {player.runes}</p>
+                                <p>Items: {player.item_0}, {player.item_1}, {player.item_2}, {player.item_3}, {player.item_4}, {player.item_5}</p>
+                            </div>
+                        </div>
+                    </Card>
+                {/each}
+            </div>
+            <Button on:click={viewPlayerStats} class="mt-6 futuristic-btn">Back to Player Stats</Button>
+        </div>
     {/if}
 
-    {#if paginatedMatches.length}
-        <h2 class="font-bold text-lg mt-6">Match History</h2>
-        <Table>
-            <thead>
-                <tr>
-                    <th>Match ID</th>
-                    <th>Hero</th>
-                    <th>K/D/A</th>
-                    <th>Result</th>
-                </tr>
-            </thead>
-            <tbody>
-                {#each paginatedMatches as match}
-                    <tr class="cursor-pointer" on:click={() => fetchMatchDetails(match.match_id)}>
-                        <td>{match.match_id}</td>
-                        <td>{getHeroName(match.hero_id)}</td>
-                        <td>{match.kills}/{match.deaths}/{match.assists}</td>
-                        <td>{match.radiant_win ? 'Win' : 'Loss'}</td>
-                    </tr>
-                {/each}
-            </tbody>
-        </Table>
-        <div class="flex justify-between mt-4">
-            <Button disabled={currentPage <= 1} on:click={() => changePage(currentPage - 1)}>Previous</Button>
-            <Button disabled={(currentPage * rowsPerPage) >= matchHistory.length} on:click={() => changePage(currentPage + 1)}>Next</Button>
-        </div>
+    
     {/if}
 </div>
