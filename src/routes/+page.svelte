@@ -24,7 +24,7 @@
             fetch(`https://api.opendota.com/api/players/${accountId}`),
             fetch(`https://api.opendota.com/api/players/${accountId}/wl`),
             fetch(`https://api.opendota.com/api/players/${accountId}/totals`),
-            fetch(`https://api.opendota.com/api/players/${accountId}/matches`),
+            fetch(`https://api.opendota.com/api/players/${accountId}/recentMatches`),
         ]);
         playerStats = await statsResponse.json();
         playerStats.winLose = await wlResponse.json();
@@ -196,11 +196,10 @@
                         <div class="flex justify-between mt-2">
                             <div>
                                 <p>Player ID: {player.account_id}</p>
+                                <p>Player Name: {player.personaname}</p>
                                 <p>K/D/A: {player.kills}/{player.deaths}/{player.assists}</p>
                                 <p>GPM: {player.gold_per_min}</p>
                                 <p>XPM: {player.xp_per_min}</p>
-                            </div>
-                            <div>
                                 <p>Team: {player.isRadiant ? 'Radiant' : 'Dire'}</p>
                                 <p>Wards Placed: {player.sen_placed}</p>
                                 <p>Runes: {player.runes}</p>
