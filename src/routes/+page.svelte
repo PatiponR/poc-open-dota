@@ -1,6 +1,8 @@
 <script>
     import { onMount } from 'svelte';
     import { Button, Card, Input, Table, TableBody, TableBodyCell, TableBodyRow, TableHead, TableHeadCell } from 'flowbite-svelte';
+    import { Bar } from 'svelte-chartjs';
+    import Chart from 'chart.js/auto';
 
     let steamID3 = '88223015';
     let playerStats = {};
@@ -12,6 +14,20 @@
     let paginatedMatches = [];
     let viewingMatchDetails = false;
     let heroes = [];
+    let playerHistogram = [];
+
+    let histogramChartData = {
+        labels: [],
+        datasets: [
+            {
+                label: 'Games',
+                data: [],
+                backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1
+            }
+        ]
+    };
 
     async function fetchHeroes() {
         const response = await fetch('https://api.opendota.com/api/heroes');
@@ -20,17 +36,25 @@
 
     async function fetchData() {
         const accountId = steamID3;
-        const [statsResponse, wlResponse, totalsResponse, matchesResponse] = await Promise.all([
+        const [statsResponse, wlResponse, totalsResponse, matchesResponse, histogramResponse] = await Promise.all([
             fetch(`https://api.opendota.com/api/players/${accountId}`),
             fetch(`https://api.opendota.com/api/players/${accountId}/wl`),
             fetch(`https://api.opendota.com/api/players/${accountId}/totals`),
             fetch(`https://api.opendota.com/api/players/${accountId}/recentMatches`),
+            fetch(`https://api.opendota.com/api/players/${accountId}/histograms/kills`)
         ]);
         playerStats = await statsResponse.json();
         playerStats.winLose = await wlResponse.json();
         playerTotals = await totalsResponse.json();
         matchHistory = await matchesResponse.json();
+        playerHistogram = await histogramResponse.json();
+        updateHistogramChartData();
         paginateMatches();
+    }
+
+    function updateHistogramChartData() {
+        histogramChartData.labels = playerHistogram.map(item => item.x.toString());
+        histogramChartData.datasets[0].data = playerHistogram.map(item => item.games);
     }
 
     async function fetchMatchDetails(matchId) {
@@ -68,6 +92,17 @@
     onMount(async () => {
         await fetchHeroes();
     });
+
+    // Chart options
+    const options = {
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    };
+
+    const data = histogramChartData;
 </script>
 
 <style>
@@ -91,21 +126,17 @@
         background-color: #121212;
         color: #ffffff;
     }
-    /* Adjust text color for better readability */
     .text-gray-600 {
         color: rgba(255, 255, 255, 0.7);
     }
-
     .text-green-500 {
-        color: #4caf50; /* Green color */
+        color: #4caf50;
     }
-
     .text-red-500 {
-        color: #f44336; /* Red color */
+        color: #f44336;
     }
-
     .text-blue-600 {
-        color: #2196f3; /* Blue color */
+        color: #2196f3;
     }
 </style>
 
@@ -114,8 +145,6 @@
         <Input type="text" bind:value={steamID3} placeholder="Enter SteamID3" class="mr-2 w-full max-w-xs" />
         <Button on:click={fetchData} class="futuristic-btn">Confirm</Button>
     </div>
-
-   
 
     {#if !viewingMatchDetails}
         {#if playerStats && playerStats.winLose}
@@ -149,6 +178,14 @@
                 </div>
             </div>
         {/if}
+
+         <!-- Histogram Chart Display -->
+    {#if histogramChartData.labels.length}
+        <div class="futuristic-card shadow-xl rounded-lg p-6 mb-6 mt-6">
+            <h2 class="text-xl font-semibold mb-4 futuristic-header">Player Histogram</h2>
+            <Bar {options} {data} />
+        </div>
+    {/if}
 
         {#if paginatedMatches.length}
             <div class="mt-4">
@@ -212,7 +249,6 @@
             <Button on:click={viewPlayerStats} class="mt-6 futuristic-btn">Back to Player Stats</Button>
         </div>
     {/if}
-
-    
     {/if}
+
 </div>
